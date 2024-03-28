@@ -1,4 +1,3 @@
-import { model } from 'mongoose';
 "use server";
 
 import { revalidatePath } from "next/cache";

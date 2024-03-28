@@ -25,25 +25,87 @@ import { FileUploader } from "./FileUploader";
 import Image from "next/image";
 import DatePicker from "react-datepicker";
 import { Checkbox } from "../ui/checkbox";
+import { useUploadThing } from "@/lib/uploadthing";
+import { useRouter } from "next/navigation";
+import { createEvent, updateEvent } from "@/lib/actions/event.actions";
+import { IEvent } from "@/lib/database/models/event.model";
 
 type EventFormProps = {
   type: "Create" | "Update";
   userId: string;
+  event?: IEvent;
 };
 
-const EventForm = ({ userId, type }: EventFormProps) => {
+const EventForm = ({ userId, type, event }: EventFormProps) => {
+  const eventId = event?._id;
   const [files, setFiles] = useState<File[]>([]);
-  const initialValues = eventDefaultValues;
+  const initialValues =
+    event && type === "Update"
+      ? {
+          ...event,
+          startDateTime: new Date(event.startDateTime),
+          endDateTime: new Date(event.endDateTime),
+          categoryId: event.category._id,
+        }
+      : eventDefaultValues;
+
+  const { startUpload } = useUploadThing("imageUploader");
+  const router = useRouter();
 
   const form = useForm<z.infer<typeof eventFormSchema>>({
     resolver: zodResolver(eventFormSchema),
     defaultValues: initialValues,
   });
 
-  function onSubmit(values: z.infer<typeof eventFormSchema>) {
-    // Do something with the form values.
-    // ✅ This will be type-safe and validated.
-    console.log(values);
+  async function onSubmit(values: z.infer<typeof eventFormSchema>) {
+    let uploadedImgUrl = values.imageUrl;
+
+    if (files.length) {
+      const uploadedImages = await startUpload(files);
+
+      if (!uploadedImages) {
+        return;
+      }
+
+      uploadedImgUrl = uploadedImages[0].url;
+    }
+
+    if (type === "Create") {
+      try {
+        const newEvent = await createEvent({
+          event: { ...values, imageUrl: uploadedImgUrl },
+          userId,
+          path: "/profile",
+        });
+
+        if (newEvent) {
+          form.reset();
+          router.push(`/events/${newEvent._id}`);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    }
+
+    if (type === "Update") {
+      if (!eventId) {
+        router.back();
+        return;
+      }
+
+      try {
+        const updatedEvent = await updateEvent({
+          event: { ...values, imageUrl: uploadedImgUrl, _id: eventId },
+          path: `/events/${eventId}`,
+        });
+        if (updatedEvent) {
+          form.reset();
+          router.push(`/events/${updatedEvent._id}`);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    }
   }
 
   return (
@@ -241,7 +303,7 @@ const EventForm = ({ userId, type }: EventFormProps) => {
                       type="number"
                       placeholder="Price"
                       {...field}
-                      className="p-regular-16 border-0 bg-grey-50 outline-offset-0 focus:border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                      className="border-0 p-regular-16 bg-grey-50 outline-offset-0 focus:border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
                     />
 
                     <FormField
@@ -253,7 +315,7 @@ const EventForm = ({ userId, type }: EventFormProps) => {
                             <div className="flex items-center">
                               <label
                                 htmlFor="isFree"
-                                className="whitespace-nowrap pr-3 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                className="pr-3 leading-none whitespace-nowrap peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                               >
                                 Free Ticket
                               </label>
@@ -262,7 +324,7 @@ const EventForm = ({ userId, type }: EventFormProps) => {
                                 onCheckedChange={field.onChange}
                                 checked={field.value}
                                 id="isFree"
-                                className="mr-2 h-5 w-5 border-2 border-primary-500"
+                                className="w-5 h-5 mr-2 border-2 border-primary-500"
                               />
                             </div>
                           </FormControl>
@@ -308,7 +370,7 @@ const EventForm = ({ userId, type }: EventFormProps) => {
           type="submit"
           size="lg"
           disabled={form.formState.isSubmitting}
-          className="button w-full"
+          className="w-full button"
         >
           {form.formState.isSubmitting ? "Submitting..." : `${type} Event `}
         </Button>
