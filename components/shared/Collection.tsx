@@ -13,7 +13,7 @@ type CollectionProps = {
 };
 
 const Collection = ({
-  data,
+  data = [],
   emptyTitle,
   emptyStateSubtext,
   collectionType,

@@ -11,10 +11,10 @@ import {
 
 import { connectToDatabase } from "@/lib/database";
 import { handleError } from "@/lib/utils";
+import { revalidatePath } from "next/cache";
+import Category from "../database/models/category.model";
 import Event from "../database/models/event.model";
 import User from "../database/models/user.model";
-import Category from "../database/models/category.model";
-import { revalidatePath } from "next/cache";
 
 const populateEvent = async (query: any) => {
   return query
@@ -42,7 +42,7 @@ export const createEvent = async ({
   try {
     await connectToDatabase();
 
-    const organizer = await User.findOne({ clerkId: userId });
+    const organizer = await User.findById(userId);
 
     if (!organizer) {
       throw new Error("Organizer doesn't exist!");
@@ -53,6 +53,8 @@ export const createEvent = async ({
       category: event.categoryId,
       organizer: organizer._id,
     });
+    
+    revalidatePath(path);
 
     return JSON.parse(JSON.stringify(newEvent));
   } catch (error) {
@@ -77,13 +79,13 @@ export const getEventById = async (eventId: string) => {
 };
 
 // UPDATE
-export async function updateEvent({ event, path }: UpdateEventParams) {
+export async function updateEvent({ event, path, userId }: UpdateEventParams) {
   try {
     await connectToDatabase();
 
     const eventToUpdate = await Event.findById(event._id);
-    
-    if (!eventToUpdate) {
+
+    if (!eventToUpdate || eventToUpdate.organizer.toHexString() !== userId) {
       throw new Error("Unauthorized or event not found");
     }
 

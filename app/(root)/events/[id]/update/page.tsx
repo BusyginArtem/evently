@@ -9,7 +9,8 @@ type UpdateEventProps = {
 };
 
 const UpdateEvent = async ({ params: { id } }: UpdateEventProps) => {
-  const { userId: clerkUserId } = auth();
+  const { sessionClaims } = auth();
+  const userId = sessionClaims?.userId as string;
 
   const event = await getEventById(id);
 
@@ -22,7 +23,7 @@ const UpdateEvent = async ({ params: { id } }: UpdateEventProps) => {
       </section>
 
       <div className="my-8 wrapper">
-        <EventForm userId={clerkUserId as string} type="Update" event={event} />
+        <EventForm userId={userId as string} type="Update" event={event} />
       </div>
     </>
   );

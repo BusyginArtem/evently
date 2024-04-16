@@ -1,10 +1,10 @@
-import type { Metadata } from "next";
-import { Poppins } from "next/font/google";
-import { ClerkProvider } from "@clerk/nextjs";
-import type { Viewport } from "next";
-
-import "./globals.css";
 import "@uploadthing/react/styles.css";
+import "./globals.css";
+
+import { ClerkProvider } from "@clerk/nextjs";
+import type { Metadata, Viewport } from "next";
+import { Poppins } from "next/font/google";
+
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -18,21 +18,21 @@ export const metadata: Metadata = {
   icons: {
     icon: "/assets/images/logo.svg",
   },
-  // viewport: {
-  //   width: "device-width",
-  //   height: "device-height",
-  //   initialScale: 1,
-  //   maximumScale: 1,
-  //   minimumScale: 1,
-  // },
+  viewport: {
+    width: "device-width",
+    height: "device-height",
+    initialScale: 1,
+    maximumScale: 1,
+    minimumScale: 1,
+  },
 };
 
 // export const viewport: Viewport = {
 //   width: "device-width",
-//   // height: "device-height",
+//   height: "device-height",
 //   initialScale: 1,
-//   // maximumScale: 1,
-//   // minimumScale: 1,
+//   maximumScale: 1,
+//   minimumScale: 1,
 // };
 
 export default function RootLayout({

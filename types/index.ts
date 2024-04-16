@@ -48,6 +48,7 @@ export type UpdateEventParams = {
     url: string;
   };
   path: string;
+  userId: string;
 };
 
 export type DeleteEventParams = {

@@ -10,6 +10,7 @@ import Checkout from "./Checkout";
 const CheckoutButton = ({ event }: { event: IEvent }) => {
   const { user } = useUser();
   const userId = user?.publicMetadata.userId as string;
+
   const hasEventFinished = new Date(event.endDateTime) < new Date();
 
   return (
@@ -21,7 +22,7 @@ const CheckoutButton = ({ event }: { event: IEvent }) => {
       ) : (
         <>
           <SignedOut>
-            <Button asChild className="button rounded-full" size="lg">
+            <Button asChild className="rounded-full button" size="lg">
               <Link href="/sign-in">Get Tickets</Link>
             </Button>
           </SignedOut>
